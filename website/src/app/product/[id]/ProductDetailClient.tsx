@@ -428,35 +428,35 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
 
-              {/* 2. Side-by-Side Dual Product Cards (Multi-Image Viewer, Perfect Image Fit & 1-by-1 Line-Item Spacing) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+              {/* 2. Side-by-Side Dual Product Cards (SIDE-BY-SIDE ON BOTH MOBILE & DESKTOP: grid-cols-2) */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-6 items-stretch">
                 
                 {/* LEFT CARD: Prescribed Product */}
-                <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-5">
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-7 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-3 sm:space-y-5">
                   <div>
                     {/* 1. Perfect Image Container & Multi-Image Gallery */}
-                    <div className="bg-slate-50/80 rounded-2xl border border-slate-200 p-3 mb-4 flex flex-col items-center">
-                      <div className="relative w-full h-44 sm:h-48 bg-white rounded-xl border border-slate-200/60 p-2 overflow-hidden shadow-2xs flex items-center justify-center">
+                    <div className="bg-slate-50/80 rounded-xl sm:rounded-2xl border border-slate-200 p-1.5 sm:p-3 mb-2 sm:mb-4 flex flex-col items-center">
+                      <div className="relative w-full h-28 sm:h-48 bg-white rounded-lg sm:rounded-xl border border-slate-200/60 p-1 overflow-hidden shadow-2xs flex items-center justify-center">
                         <Image
                           src={images[currentImageIndex] || '/images/medicine-placeholder.png'}
                           alt={product?.name || ''}
                           fill
-                          className="object-contain object-center p-2"
+                          className="object-contain object-center p-1 sm:p-2"
                           priority
                         />
                       </div>
                       {/* Multi-Image Thumbnail Selector Strip */}
                       {images.length > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-2.5 overflow-x-auto max-w-full pb-1">
+                        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2.5 overflow-x-auto max-w-full pb-0.5">
                           {images.map((img, idx) => (
                             <button
                               key={idx}
                               onClick={() => setCurrentImageIndex(idx)}
-                              className={`relative w-11 h-11 rounded-lg border-2 overflow-hidden shrink-0 transition-all ${
+                              className={`relative w-8 h-8 sm:w-11 sm:h-11 rounded-lg border-2 overflow-hidden shrink-0 transition-all ${
                                 currentImageIndex === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-slate-200 opacity-60 hover:opacity-100'
                               }`}
                             >
-                              <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-contain p-1 bg-white" />
+                              <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-contain p-0.5 bg-white" />
                             </button>
                           ))}
                         </div>
@@ -464,38 +464,38 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     </div>
 
                     {/* 2. Vertical 1-by-1 Spaced Line Items */}
-                    <div className="space-y-2.5">
+                    <div className="space-y-1.5 sm:space-y-2.5 text-[11px] sm:text-xs">
                       {/* Product Name */}
-                      <h4 className="text-base sm:text-xl font-black text-slate-900 uppercase leading-snug">{product?.name}</h4>
+                      <h4 className="text-xs sm:text-xl font-black text-slate-900 uppercase leading-tight sm:leading-snug line-clamp-2">{product?.name}</h4>
 
                       {/* Salt Composition */}
-                      <div className="flex items-start gap-2 text-xs font-bold pt-1 border-t border-slate-100">
-                        <span className="text-slate-400 font-semibold w-16 shrink-0">Salt:</span>
-                        <span className="text-slate-800 italic">{product?.composition || 'Active Chemical Salt'}</span>
+                      <div className="flex items-start gap-1 sm:gap-2 font-bold pt-1 border-t border-slate-100">
+                        <span className="text-slate-400 font-semibold w-10 sm:w-16 shrink-0 text-[10px] sm:text-xs">Salt:</span>
+                        <span className="text-slate-800 italic line-clamp-2">{product?.composition || 'Active Chemical Salt'}</span>
                       </div>
 
                       {/* Pack Size */}
-                      <div className="flex items-center gap-2 text-xs font-bold">
-                        <span className="text-slate-400 font-semibold w-16 shrink-0">Pack:</span>
-                        <span className="text-slate-800">{product?.packagingDetail || 'Strip of 10 tablets'}</span>
+                      <div className="flex items-center gap-1 sm:gap-2 font-bold">
+                        <span className="text-slate-400 font-semibold w-10 sm:w-16 shrink-0 text-[10px] sm:text-xs">Pack:</span>
+                        <span className="text-slate-800 truncate">{product?.packagingDetail || 'Strip of 10 tablets'}</span>
                       </div>
 
                       {/* Marketer */}
-                      <div className="flex items-start gap-2 text-xs font-bold">
-                        <span className="text-slate-400 font-semibold w-16 shrink-0">Marketer:</span>
-                        <span className="text-slate-800">{product?.marketerName || product?.manufacturer || 'Sun Pharmaceutical Industries Ltd'}</span>
+                      <div className="flex items-start gap-1 sm:gap-2 font-bold">
+                        <span className="text-slate-400 font-semibold w-10 sm:w-16 shrink-0 text-[10px] sm:text-xs">Marketer:</span>
+                        <span className="text-slate-800 line-clamp-1">{product?.marketerName || product?.manufacturer || 'Sun Pharma'}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-150 space-y-3">
+                  <div className="pt-2 sm:pt-4 border-t border-slate-150 space-y-2 sm:space-y-3">
                     {/* Price & Unit Cost */}
                     <div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl sm:text-4xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
-                        {unitMrp > unitPrice && <span className="text-sm text-slate-400 line-through font-bold">MRP ₹{unitMrp}</span>}
+                      <div className="flex items-baseline gap-1 sm:gap-2">
+                        <span className="text-xl sm:text-4xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
+                        {unitMrp > unitPrice && <span className="text-[10px] sm:text-sm text-slate-400 line-through font-bold">MRP ₹{unitMrp}</span>}
                       </div>
-                      <p className="text-xs text-slate-500 font-bold mt-0.5">
+                      <p className="text-[9.5px] sm:text-xs text-slate-500 font-bold mt-0.5">
                         ₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                     </div>
@@ -503,47 +503,47 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     {/* Single Add To Cart Button */}
                     <Button
                       onClick={() => addCurrentToCart(1)}
-                      className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+                      className="w-full h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-1 sm:gap-2"
                     >
-                      <ShoppingCart className="w-4 h-4" />
+                      <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       <span>Add To Cart (₹{unitPrice})</span>
                     </Button>
                   </div>
                 </div>
 
                 {/* RIGHT CARD: ✨ SAHI RECOMMENDED GENERIC (High Highlighted VIP Winner) */}
-                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-3xl p-5 sm:p-7 border-4 border-emerald-500 shadow-[0_25px_60px_rgba(16,185,129,0.35)] flex flex-col justify-between space-y-5 relative overflow-hidden group">
+                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-3 sm:p-7 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-3 sm:space-y-5 relative overflow-hidden group">
                   
                   {/* Floating Gold Best Value Ribbon */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 via-amber-500 to-amber-400 text-slate-950 text-xs font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
-                    👑 BEST VALUE · SAVE {altSavePct}%
+                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 via-amber-500 to-amber-400 text-slate-950 text-[9px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-bl-xl sm:rounded-bl-2xl uppercase tracking-widest shadow-md flex items-center gap-0.5 sm:gap-1 z-20">
+                    👑 BEST VALUE
                   </div>
 
                   <div>
                     {/* Header Tag */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-md flex items-center gap-1 border border-emerald-400">
-                        ✨ SAHI RECOMMENDED GENERIC
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9px] sm:text-[11px] font-black uppercase tracking-wider px-2 sm:px-4 py-0.5 sm:py-1 rounded-full shadow-md flex items-center gap-1 border border-emerald-400">
+                        ✨ SAHI GENERIC
                       </span>
                     </div>
 
                     {/* 1. Perfect Image Container & Multi-Image Gallery */}
-                    <div className="bg-emerald-50/80 rounded-2xl border-2 border-emerald-200 p-3 mb-4 flex flex-col items-center">
-                      <div className="relative w-full h-44 sm:h-48 bg-white rounded-xl border border-emerald-200/80 p-2 overflow-hidden shadow-xs flex items-center justify-center">
+                    <div className="bg-emerald-50/80 rounded-xl sm:rounded-2xl border border-emerald-200 p-1.5 sm:p-3 mb-2 sm:mb-4 flex flex-col items-center">
+                      <div className="relative w-full h-28 sm:h-48 bg-white rounded-lg sm:rounded-xl border border-emerald-200/80 p-1 overflow-hidden shadow-xs flex items-center justify-center">
                         <Image
                           src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]}
                           alt={genericAlt?.product_name || genericAlt?.name}
                           fill
-                          className="object-contain object-center p-2"
+                          className="object-contain object-center p-1 sm:p-2"
                           priority
                         />
                       </div>
                       {/* Multi-Image Thumbnail Selector Strip */}
                       {(genericAlt?.images?.length || 0) > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-2.5 overflow-x-auto max-w-full pb-1">
+                        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2.5 overflow-x-auto max-w-full pb-0.5">
                           {genericAlt.images.map((img: string, idx: number) => (
-                            <div key={idx} className="relative w-11 h-11 rounded-lg border-2 border-emerald-300 overflow-hidden shrink-0 bg-white">
-                              <Image src={img} alt={`Generic Thumbnail ${idx}`} fill className="object-contain p-1" />
+                            <div key={idx} className="relative w-8 h-8 sm:w-11 sm:h-11 rounded-lg border-2 border-emerald-300 overflow-hidden shrink-0 bg-white">
+                              <Image src={img} alt={`Generic Thumbnail ${idx}`} fill className="object-contain p-0.5" />
                             </div>
                           ))}
                         </div>
@@ -551,53 +551,53 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     </div>
 
                     {/* 2. Vertical 1-by-1 Spaced Line Items */}
-                    <div className="space-y-2.5">
+                    <div className="space-y-1.5 sm:space-y-2.5 text-[11px] sm:text-xs">
                       {/* Product Name */}
-                      <h4 className="text-base sm:text-xl font-black text-slate-900 uppercase leading-snug">{genericAlt?.product_name || genericAlt?.name}</h4>
+                      <h4 className="text-xs sm:text-xl font-black text-slate-900 uppercase leading-tight sm:leading-snug line-clamp-2">{genericAlt?.product_name || genericAlt?.name}</h4>
 
                       {/* Salt Composition */}
-                      <div className="flex items-start gap-2 text-xs font-bold pt-1 border-t border-emerald-100">
-                        <span className="text-emerald-700 font-extrabold w-16 shrink-0">Salt:</span>
-                        <span className="text-emerald-900 italic flex items-center gap-1">
-                          <Check className="w-4 h-4 bg-emerald-600 text-white rounded-full p-0.5 shrink-0" />
-                          <span>✓ {product?.composition || 'Active Chemical Salt'} (100% Exact Match)</span>
+                      <div className="flex items-start gap-1 sm:gap-2 font-bold pt-1 border-t border-emerald-100">
+                        <span className="text-emerald-700 font-extrabold w-10 sm:w-16 shrink-0 text-[10px] sm:text-xs">Salt:</span>
+                        <span className="text-emerald-900 italic line-clamp-2 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 bg-emerald-600 text-white rounded-full p-0.5 shrink-0 hidden sm:inline-block" />
+                          <span>✓ {product?.composition || 'Active Salt'}</span>
                         </span>
                       </div>
 
                       {/* Pack Size */}
-                      <div className="flex items-center gap-2 text-xs font-bold">
-                        <span className="text-emerald-700 font-extrabold w-16 shrink-0">Pack:</span>
-                        <span className="text-emerald-950">{genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}</span>
+                      <div className="flex items-center gap-1 sm:gap-2 font-bold">
+                        <span className="text-emerald-700 font-extrabold w-10 sm:w-16 shrink-0 text-[10px] sm:text-xs">Pack:</span>
+                        <span className="text-emerald-950 truncate">{genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}</span>
                       </div>
 
                       {/* Marketer */}
-                      <div className="flex items-start gap-2 text-xs font-bold">
-                        <span className="text-emerald-700 font-extrabold w-16 shrink-0">Marketer:</span>
-                        <span className="text-emerald-950">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed WHO-GMP Quality Manufacturer'}</span>
+                      <div className="flex items-start gap-1 sm:gap-2 font-bold">
+                        <span className="text-emerald-700 font-extrabold w-10 sm:w-16 shrink-0 text-[10px] sm:text-xs">Marketer:</span>
+                        <span className="text-emerald-950 line-clamp-1">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'WHO-GMP Lab'}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-emerald-200 space-y-3">
+                  <div className="pt-2 sm:pt-4 border-t border-emerald-200 space-y-2 sm:space-y-3">
                     {/* Price & Unit Cost */}
                     <div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl sm:text-4xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
-                        {unitPrice > altPrice && <span className="text-sm text-slate-400 line-through font-bold">MRP ₹{unitPrice}</span>}
-                        <span className="bg-amber-400 text-slate-950 text-[10.5px] font-black px-2.5 py-0.5 rounded-full uppercase ml-1">SAVE ₹{(unitPrice - altPrice).toFixed(0)}</span>
+                      <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
+                        <span className="text-xl sm:text-4xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
+                        {unitPrice > altPrice && <span className="text-[10px] sm:text-sm text-slate-400 line-through font-bold">MRP ₹{unitPrice}</span>}
+                        <span className="bg-amber-400 text-slate-950 text-[9px] sm:text-[10.5px] font-black px-1.5 sm:px-2.5 py-0.5 rounded-full uppercase">SAVE ₹{(unitPrice - altPrice).toFixed(0)}</span>
                       </div>
-                      <p className="text-xs text-emerald-900 font-bold mt-0.5">
-                        ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet · <span className="text-emerald-700 font-black">YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF)</span>
+                      <p className="text-[9.5px] sm:text-xs text-emerald-900 font-bold mt-0.5">
+                        ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                     </div>
 
                     {/* Single Add To Cart CTA Button */}
                     <Button
                       onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                      className="w-full h-15 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-base uppercase tracking-wider shadow-xl shadow-emerald-600/35 active:scale-98 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300 hover:scale-[1.01]"
+                      className="w-full h-11 sm:h-15 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-[10px] sm:text-base uppercase tracking-wider shadow-xl shadow-emerald-600/35 active:scale-98 transition-all flex items-center justify-center gap-1 sm:gap-2 border-2 border-emerald-300 hover:scale-[1.01]"
                     >
-                      <ShoppingCart className="w-5 h-5" />
-                      <span>🚀 Switch & Add Generic To Cart (₹{altPrice})</span>
+                      <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+                      <span>🚀 Switch & Save (₹{altPrice})</span>
                     </Button>
                   </div>
                 </div>
