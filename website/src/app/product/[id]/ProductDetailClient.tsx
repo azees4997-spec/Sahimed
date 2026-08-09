@@ -170,8 +170,8 @@ function ProductMiniCard({ item, onAdd }: { item: any; onAdd: (item: any) => voi
         <p className="text-[9px] text-slate-400 font-medium truncate">{item.taxonomy?.marketer_name || item.manufacturer || ''}</p>
         <div className="flex items-center justify-between mt-auto pt-1">
           <div>
-            <p className="text-sm font-black text-slate-900">â‚¹{price}</p>
-            {mrp > price && <p className="text-[9px] text-slate-400 line-through">â‚¹{mrp}</p>}
+            <p className="text-sm font-black text-slate-900">₹{price}</p>
+            {mrp > price && <p className="text-[9px] text-slate-400 line-through">₹{mrp}</p>}
           </div>
           <button onClick={e => { e.preventDefault(); onAdd(item); }}
             className="w-7 h-7 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
@@ -393,7 +393,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 <div className="flex items-center justify-center gap-1.5 min-w-0">
                   <Check className="w-4 h-4 bg-white/20 text-white rounded-full p-0.5 shrink-0" />
                   <span className="text-[9.5px] sm:text-xs font-black uppercase tracking-tight text-white truncate">
-                    CLINICAL BIO-EQUIVALENCE MATCH Â· 100% EXACT SALT MATCH
+                    CLINICAL BIO-EQUIVALENCE MATCH · 100% EXACT SALT MATCH
                   </span>
                 </div>
               </div>
@@ -461,7 +461,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         </div>
                         <div className="min-h-[1.8rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Quality Standard</span>
-                          <span className="text-slate-800 font-bold block text-[10px] sm:text-xs">ðŸ›¡ï¸ WHO & FDA Approved</span>
+                          <span className="text-slate-800 font-bold block text-[10px] sm:text-xs">🛡️ WHO & FDA Approved</span>
                         </div>
                       </div>
                     </div>
@@ -472,14 +472,14 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     {/* Price & Unit Cost + Educational Markup Note */}
                     <div>
                       <div className="flex items-baseline gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-3xl font-black text-slate-950 font-outfit">â‚¹{unitPrice}</span>
-                        {unitMrp > unitPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP â‚¹{unitMrp}</span>}
+                        <span className="text-lg sm:text-3xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
+                        {unitMrp > unitPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{unitMrp}</span>}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-slate-500 font-bold mt-0.5">
-                        â‚¹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
+                        ₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                       <p className="text-[8.5px] sm:text-[9.5px] text-rose-600 font-bold mt-1 leading-tight flex items-center gap-1 bg-rose-50 p-1 rounded border border-rose-200">
-                        <span>âš ï¸ Includes Brand Marketing & Packaging Markup</span>
+                        <span>⚠️ Includes Brand Marketing & Packaging Markup</span>
                       </p>
                     </div>
 
@@ -552,7 +552,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         </div>
                         <div className="min-h-[1.8rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Quality Standard</span>
-                          <span className="text-emerald-950 font-bold block text-[10px] sm:text-xs">ðŸ›¡ï¸ WHO & FDA Approved</span>
+                          <span className="text-emerald-950 font-bold block text-[10px] sm:text-xs">🛡️ WHO & FDA Approved</span>
                         </div>
                       </div>
                     </div>
@@ -563,8 +563,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     {/* Price & Unit Cost + Prominent 100% Visible Mobile Discount % Badge */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">â‚¹{altPrice}</span>
-                        {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP â‚¹{altMrp}</span>}
+                        <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
+                        {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{altMrp}</span>}
                         {genericProductDiscountPct > 0 && (
                           <span className="bg-amber-400 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-2xs shrink-0">
                             {genericProductDiscountPct}% OFF
@@ -572,11 +572,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         )}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-emerald-900 font-bold mt-0.5">
-                        â‚¹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
+                        ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                       {switchSavingsAmount > 0 && (
                         <p className="text-[8.5px] sm:text-[9.5px] text-emerald-800 font-black mt-1 leading-tight flex items-center gap-1 bg-emerald-100/90 p-1 rounded border border-emerald-300">
-                          <span>ðŸ’° YOU SAVE â‚¹{switchSavingsAmount.toFixed(0)} VS BRAND</span>
+                          <span>💰 YOU SAVE ₹{switchSavingsAmount.toFixed(0)} VS BRAND</span>
                         </p>
                       )}
                     </div>
@@ -668,11 +668,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   <div className="grid grid-cols-2 p-4">
                     <div className="space-y-0.5 pr-2">
                       <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider">Quality Standard</span>
-                      <p className="font-bold text-slate-700 flex items-center gap-1">ðŸ›¡ï¸ WHO & FDA Approved Brand</p>
+                      <p className="font-bold text-slate-700 flex items-center gap-1">🛡️ WHO & FDA Approved Brand</p>
                     </div>
                     <div className="space-y-0.5 pl-2 border-l border-slate-200">
                       <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider">Quality Standard</span>
-                      <p className="font-bold text-emerald-700 flex items-center gap-1">ðŸ›¡ï¸ WHO-GMP Certified Facilities</p>
+                      <p className="font-bold text-emerald-700 flex items-center gap-1">🛡️ WHO-GMP Certified Facilities</p>
                     </div>
                   </div>
 
@@ -680,12 +680,12 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   <div className="grid grid-cols-2 p-4 bg-emerald-50/50">
                     <div className="space-y-0.5 pr-2">
                       <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider">Unit Cost</span>
-                      <p className="font-black text-slate-900 text-sm">â‚¹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
+                      <p className="font-black text-slate-900 text-sm">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
                     </div>
                     <div className="space-y-0.5 pl-2 border-l border-emerald-200">
                       <span className="text-[9.5px] font-black uppercase text-emerald-700 tracking-wider">Unit Cost & Savings</span>
                       <div className="flex items-baseline gap-2">
-                        <p className="font-black text-emerald-700 text-sm">â‚¹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
+                        <p className="font-black text-emerald-700 text-sm">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
                         <span className="bg-emerald-600 text-white font-black text-[9.5px] px-2.5 py-0.5 rounded-full uppercase">Save {altSavePct}%</span>
                       </div>
                     </div>
@@ -695,7 +695,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           )}
 
-          {/* ðŸ“± MOBILE FIRST-FRAME HERO CARD â€” Rendered ONLY if no generic substitute comparison */}
+          {/* 📱 MOBILE FIRST-FRAME HERO CARD â€” Rendered ONLY if no generic substitute comparison */}
           {!showComparison && (
             <>
               <div className="sm:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-3">
@@ -752,13 +752,13 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
               <div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black text-slate-950 font-outfit">â‚¹{currentPrice}</span>
+                  <span className="text-2xl font-black text-slate-950 font-outfit">₹{currentPrice}</span>
                   {currentMrp > currentPrice && (
-                    <span className="text-xs text-slate-400 line-through font-bold">â‚¹{currentMrp}</span>
+                    <span className="text-xs text-slate-400 line-through font-bold">₹{currentMrp}</span>
                   )}
                 </div>
                 {discountPct > 0 && (
-                  <p className="text-[9.5px] font-bold text-emerald-600">Save â‚¹{(currentMrp - currentPrice).toFixed(0)}</p>
+                  <p className="text-[9.5px] font-bold text-emerald-600">Save ₹{(currentMrp - currentPrice).toFixed(0)}</p>
                 )}
               </div>
 
@@ -853,7 +853,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
                 <div className="text-white">
                   <p className="text-xs font-black uppercase tracking-widest mb-0.5">Verified Genuine Product</p>
-                  <p className="text-[10px] text-white/80 font-medium">Sourced directly from licensed distributors Â· Quality checked by our pharmacists</p>
+                  <p className="text-[10px] text-white/80 font-medium">Sourced directly from licensed distributors · Quality checked by our pharmacists</p>
                 </div>
               </div>
             </div>
@@ -881,7 +881,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {product?.composition && <p className="mt-1 text-xs text-slate-400 font-medium italic">{product.composition}</p>}
                   <p className="mt-2 text-sm font-medium text-slate-500">
                     By <span className="text-primary font-semibold">{product?.marketerName || product?.manufacturer || 'â€”'}</span>
-                    {product?.categoryName && <span className="text-slate-400"> Â· {product.categoryName}</span>}
+                    {product?.categoryName && <span className="text-slate-400"> · {product.categoryName}</span>}
                   </p>
                 </div>
 
@@ -916,18 +916,18 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 <div className="flex items-end gap-4 flex-wrap">
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Our Price</p>
-                    <p className="text-4xl font-black text-slate-900">â‚¹{currentPrice}</p>
+                    <p className="text-4xl font-black text-slate-900">₹{currentPrice}</p>
                   </div>
                   {currentMrp > currentPrice && (
                     <div className="pb-1">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">MRP</p>
-                      <p className="text-sm font-medium text-slate-400 line-through">â‚¹{currentMrp}</p>
+                      <p className="text-sm font-medium text-slate-400 line-through">₹{currentMrp}</p>
                     </div>
                   )}
                   {discountPct > 0 && (
                     <div className="pb-1">
                       <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-sm">
-                        Save {discountPct}% Â· â‚¹{(currentMrp - currentPrice).toFixed(0)} off
+                        Save {discountPct}% · ₹{(currentMrp - currentPrice).toFixed(0)} off
                       </span>
                     </div>
                   )}
@@ -991,7 +991,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
                       <div>
                         <p className="text-xs font-black text-emerald-800">{edd ? `Express delivery by ${edd}` : 'Delivery available'}</p>
-                        {zone && <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">{zone} zone Â· Free shipping</p>}
+                        {zone && <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">{zone} zone · Free shipping</p>}
                       </div>
                     </div>
                     {edd && timeLeft && <p className="text-[10px] text-slate-500 font-medium px-1">Order within <span className="text-primary font-black">{timeLeft}</span> to get it by {edd}</p>}
@@ -1507,8 +1507,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                       <div className="p-3">
                         <p className="text-[10px] font-bold text-slate-800 line-clamp-2 mb-1">{item.name}</p>
-                        <p className="text-sm font-black text-slate-900">â‚¹{p}</p>
-                        {m > p && <p className="text-[9px] text-slate-400 line-through">â‚¹{m}</p>}
+                        <p className="text-sm font-black text-slate-900">₹{p}</p>
+                        {m > p && <p className="text-[9px] text-slate-400 line-through">₹{m}</p>}
                       </div>
                     </Link>
                   );
@@ -1559,8 +1559,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">{product?.name}</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-black text-slate-900">â‚¹{unitPrice * selectedQty}</span>
-                  {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through">â‚¹{unitMrp * selectedQty}</span>}
+                  <span className="text-lg font-black text-slate-900">₹{unitPrice * selectedQty}</span>
+                  {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through">₹{unitMrp * selectedQty}</span>}
                   {discountPct > 0 && <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{discountPct}% off</span>}
                 </div>
               </div>
