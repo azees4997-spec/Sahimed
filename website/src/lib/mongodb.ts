@@ -33,7 +33,12 @@ function createClient(): Promise<MongoClient> {
         { key: { is_generic: 1 } },
         { key: { isGeneric: 1 } },
         { key: { product_name: 1 } },
-        { key: { 'taxonomy.category_name': 1 } }
+        { key: { 'taxonomy.category_name': 1 } },
+        { key: { salable_status: 1, 'taxonomy.category_name': 1 } },
+        { key: { salable_status: 1, molecule_code: 1 } },
+        { key: { salable_status: 1, medicine_type: 1 } },
+        { key: { salable_status: 1, product_name: 1 } },
+        { key: { 'packaging.mrp': 1 } }
       ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
       db.collection('Category Master').createIndexes([
         { key: { showOnHomepage: 1 } },
