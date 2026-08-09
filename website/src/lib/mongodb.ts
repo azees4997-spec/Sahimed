@@ -1,8 +1,10 @@
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI;
+const DEFAULT_PRIMARY_URI = process.env.MONGODB_URI || "mongodb://azees4997_db_user:99XzB5T3H1B0fNj8@ac-mymgwbv-shard-00-00.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-01.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-02.qwsbgml.mongodb.net:27017/sahimed?ssl=true&authSource=admin";
+const FALLBACK_SEEDLIST_URI = "mongodb://azees4997_db_user:99XzB5T3H1B0fNj8@ac-mymgwbv-shard-00-00.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-01.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-02.qwsbgml.mongodb.net:27017/sahimed?ssl=true&authSource=admin";
+
 const options = {
-  serverSelectionTimeoutMS: 10000,  // increased — Firebase cold start needs time
+  serverSelectionTimeoutMS: 10000,
   connectTimeoutMS: 15000,
   maxPoolSize: 10,
   minPoolSize: 1,
@@ -12,52 +14,60 @@ const options = {
   retryWrites: true,
 };
 
-let client: MongoClient;
-
-if (!uri) {
-  throw new Error('Please add your Mongo URI to .env.local');
+// Helper to attempt connection with primary URI, falling back to direct seedlist if DNS SRV fails
+async function createClientWithFallback(): Promise<MongoClient> {
+  const targetUri = DEFAULT_PRIMARY_URI;
+  try {
+    const client = new MongoClient(targetUri, options);
+    const c = await client.connect();
+    console.log("[MongoDB Intelligence] Primary connection established successfully.");
+    scheduleIndexes(c);
+    return c;
+  } catch (err: any) {
+    console.warn("[MongoDB Intelligence] Primary URI connection failed:", err.message, "Retrying with direct seedlist fallback...");
+    try {
+      const fallbackClient = new MongoClient(FALLBACK_SEEDLIST_URI, options);
+      const c = await fallbackClient.connect();
+      console.log("[MongoDB Intelligence] Fallback seedlist connection established successfully!");
+      scheduleIndexes(c);
+      return c;
+    } catch (fallbackErr: any) {
+      console.error("[MongoDB Intelligence] CRITICAL: Both primary and fallback connections failed:", fallbackErr.message);
+      throw fallbackErr;
+    }
+  }
 }
 
-// Setup helper to establish client connection
+function scheduleIndexes(c: MongoClient) {
+  setTimeout(() => {
+    try {
+      const db = c.db('sahimed');
+      db.collection('Product Master').createIndexes([
+        { key: { 'seo.url_slug': 1 } },
+        { key: { product_id: 1 } },
+        { key: { molecule_code: 1 } },
+        { key: { is_generic: 1 } },
+        { key: { isGeneric: 1 } },
+        { key: { product_name: 1 } },
+        { key: { 'taxonomy.category_name': 1 } },
+        { key: { salable_status: 1, 'taxonomy.category_name': 1 } },
+        { key: { salable_status: 1, molecule_code: 1 } },
+        { key: { salable_status: 1, medicine_type: 1 } },
+        { key: { salable_status: 1, product_name: 1 } },
+        { key: { 'packaging.mrp': 1 } },
+        { key: { selling_price: 1 } },
+        { key: { salable_status: 1, selling_price: 1 } }
+      ]).catch(() => {});
+      db.collection('Category Master').createIndexes([
+        { key: { showOnHomepage: 1 } },
+        { key: { category: 1 } }
+      ]).catch(() => {});
+    } catch (e) {}
+  }, 300);
+}
+
 function createClient(): Promise<MongoClient> {
-  const client = new MongoClient(uri!, options);
-  return client.connect()
-    .then((c) => {
-      console.log("[MongoDB Intelligence] Connected successfully.");
-      // Ensure critical performance indexes asynchronously in background without blocking connection return
-      setTimeout(() => {
-        try {
-          const db = c.db('sahimed');
-          db.collection('Product Master').createIndexes([
-            { key: { 'seo.url_slug': 1 } },
-            { key: { product_id: 1 } },
-            { key: { molecule_code: 1 } },
-            { key: { is_generic: 1 } },
-            { key: { isGeneric: 1 } },
-            { key: { product_name: 1 } },
-            { key: { 'taxonomy.category_name': 1 } },
-            { key: { salable_status: 1, 'taxonomy.category_name': 1 } },
-            { key: { salable_status: 1, molecule_code: 1 } },
-            { key: { salable_status: 1, medicine_type: 1 } },
-            { key: { salable_status: 1, product_name: 1 } },
-            { key: { 'packaging.mrp': 1 } },
-            { key: { selling_price: 1 } },
-            { key: { salable_status: 1, selling_price: 1 } }
-          ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
-          db.collection('Category Master').createIndexes([
-            { key: { showOnHomepage: 1 } },
-            { key: { category: 1 } }
-          ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
-        } catch (e) {}
-      }, 200);
-      return c;
-    })
-    .catch((err) => {
-      console.error("[MongoDB Intelligence] CRITICAL connection error:", err);
-      const globalWithMongo = global as any;
-      delete globalWithMongo._mongoClientPromise;
-      throw err;
-    });
+  return createClientWithFallback();
 }
 
 const globalWithMongo = global as typeof globalThis & {
