@@ -105,6 +105,7 @@ export async function GET(request: Request) {
     if (moleculeCode) {
       if (moleculeCode.startsWith('MOL')) {
         query.molecule_code = moleculeCode;
+        baseFilterQuery.molecule_code = moleculeCode;
       } else {
         try {
           const { ObjectId } = require('mongodb');
@@ -122,11 +123,14 @@ export async function GET(request: Request) {
               { molecule_code: resolvedCode },
               { 'medical_info.composition': { $regex: escapeRegExp(firstSalts || comp), $options: 'i' } }
             ];
+            baseFilterQuery.$or = query.$or;
           } else {
             query.molecule_code = moleculeCode;
+            baseFilterQuery.molecule_code = moleculeCode;
           }
         } catch (e) {
           query.molecule_code = moleculeCode;
+          baseFilterQuery.molecule_code = moleculeCode;
         }
       }
     }
