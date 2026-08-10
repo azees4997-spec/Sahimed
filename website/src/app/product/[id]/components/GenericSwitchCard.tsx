@@ -177,7 +177,7 @@ export default function GenericSwitchCard({
                   <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Salt Composition</span>
                   <span className="text-emerald-950 font-extrabold italic leading-tight block line-clamp-2 flex items-center gap-1">
                     <Check className="w-3 h-3 bg-emerald-600 text-white rounded-full p-0.5 shrink-0 hidden sm:inline-block" />
-                    <span>✓ {product?.composition || 'Active Chemical Salt'}</span>
+                    <span>✓ {genericAlt?.composition || genericAlt?.taxonomy?.composition || 'Active Chemical Salt'}</span>
                   </span>
                 </div>
                 <div className="min-h-[2rem]">
@@ -275,7 +275,7 @@ export default function GenericSwitchCard({
             </div>
             <div className="space-y-1 pl-3 border-l border-slate-200">
               <span className="text-[10.5px] font-black uppercase text-emerald-600 tracking-wider">Active Salt Ingredient</span>
-              <p className="font-extrabold text-emerald-700 italic">✓ {product?.composition || 'Salt Composition'} (100% Identical Match)</p>
+              <p className="font-extrabold text-emerald-700 italic">✓ {genericAlt?.composition || genericAlt?.taxonomy?.composition || product?.composition || 'Salt Composition'}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 p-4 sm:p-5 bg-slate-50/60">

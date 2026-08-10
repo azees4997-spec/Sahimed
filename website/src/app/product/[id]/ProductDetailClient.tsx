@@ -297,32 +297,56 @@ export default function ProductDetailClient({
   // ── Generic alternatives ─────────────────────────────────────────────────
   const isGeneric = product?.is_generic === true || product?.isGeneric === true || product?.isGeneric === "true" || (product?.medicineType || product?.medicine_type || '').toLowerCase().includes('generic');
 
-  // Only search for a generic alternative when:
-  // 1. Current product is NOT itself generic
-  // 2. No manual mappedGeneric is set (manual mapping takes priority)
-  // 3. The product actually HAS a moleculeId (without it the query returns random generics)
-  const canSearchGeneric = !isGeneric && !product?.mappedGeneric && !!product?.moleculeId;
+  // Use molecule_code directly — it's already in every product document (e.g. "MOL021301")
+  // moleculeId is just an alias — fall back to molecule_code if moleculeId is missing
+  const productMolRef = product?.moleculeId || product?.molecule_code;
+
+  // Only search when: not generic, no manual override, AND has a molecule reference
+  const canSearchGeneric = !isGeneric && !product?.mappedGeneric && !!productMolRef;
+
   const { data: genericAlternatives } = useMongoDBCollection({
-    moleculeId: canSearchGeneric ? product.moleculeId : undefined,
-    isGeneric: canSearchGeneric ? true : undefined,   // don't send isGeneric if not searching
+    moleculeId: canSearchGeneric ? productMolRef : undefined,  // uses molecule_code if moleculeId missing
+    isGeneric: canSearchGeneric ? true : undefined,
     limit: canSearchGeneric ? 10 : 0,
   });
 
   const genericAlt = product?.mappedGeneric || (!isGeneric
     ? genericAlternatives?.find((a: any) =>
-        // Must be a generic
+        // Must be generic
         (a.is_generic === true || a.isGeneric === true || a.isGeneric === "true" || (a.medicine_type || '').toLowerCase().includes('generic')) &&
         // Must NOT be the same product
         String(a._id || a.id) !== String(product?._id || product?.id) &&
-        // Must share the same moleculeId — prevents random generic from appearing
-        !!product?.moleculeId &&
-        (a.moleculeId === product.moleculeId || a.molecule_code === product.molecule_code || a.moleculeId === product.molecule_code))
+        // Must share the same molecule_code — use molecule_code directly (always present)
+        !!productMolRef &&
+        (a.molecule_code === productMolRef || a.molecule_code === product?.molecule_code))
     : null);
+
+  // ── Composition safety check ─────────────────────────────────────────────
+  // Even if moleculeId matches, do a text sanity check:
+  // Extract the first active salt name from each composition and check they overlap.
+  // e.g. "Paracetamol (1000mg)" vs "Desvenlafaxine (50mg)" → NO overlap → don't show card.
+  const compositionsMatch = (() => {
+    if (!genericAlt) return false;
+    if (!product?.composition) return true; // no composition data — trust moleculeId
+    const genericComposition = genericAlt?.composition || genericAlt?.taxonomy?.composition || '';
+    if (!genericComposition) return true; // generic has no composition data — trust moleculeId
+    // Extract first salt keyword (first word before space/bracket/digit)
+    const firstSalt = (s: string) => s.split(/[\s(,+]/)[0].toLowerCase().trim();
+    const brandSalt = firstSalt(product.composition);
+    const genSalt = firstSalt(genericComposition);
+    // Check if brand salt appears in generic composition or vice versa (case-insensitive)
+    return (
+      genericComposition.toLowerCase().includes(brandSalt) ||
+      product.composition.toLowerCase().includes(genSalt) ||
+      brandSalt === genSalt
+    );
+  })();
 
   // Show comparison ONLY when:
   // - current product is a brand (not generic)
-  // - we found a real matching generic with the same molecule
-  const showComparison = !isGeneric && !!genericAlt;
+  // - a real matching generic was found with the same molecule
+  // - compositions actually overlap (catches bad moleculeId/mappedGeneric data)
+  const showComparison = !isGeneric && !!genericAlt && compositionsMatch;
 
   // ── Prices ───────────────────────────────────────────────────────────────
   const unitPrice = Number(product?.liveData?.sahimed_price || product?.price || 0);
