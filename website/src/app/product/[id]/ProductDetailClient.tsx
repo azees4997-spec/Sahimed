@@ -296,14 +296,32 @@ export default function ProductDetailClient({
 
   // ── Generic alternatives ─────────────────────────────────────────────────
   const isGeneric = product?.is_generic === true || product?.isGeneric === true || product?.isGeneric === "true" || (product?.medicineType || product?.medicine_type || '').toLowerCase().includes('generic');
+
+  // Only search for a generic alternative when:
+  // 1. Current product is NOT itself generic
+  // 2. No manual mappedGeneric is set (manual mapping takes priority)
+  // 3. The product actually HAS a moleculeId (without it the query returns random generics)
+  const canSearchGeneric = !isGeneric && !product?.mappedGeneric && !!product?.moleculeId;
   const { data: genericAlternatives } = useMongoDBCollection({
-    moleculeId: (!isGeneric && !product?.mappedGeneric) ? product?.moleculeId : undefined, isGeneric: true, limit: 10,
+    moleculeId: canSearchGeneric ? product.moleculeId : undefined,
+    isGeneric: canSearchGeneric ? true : undefined,   // don't send isGeneric if not searching
+    limit: canSearchGeneric ? 10 : 0,
   });
+
   const genericAlt = product?.mappedGeneric || (!isGeneric
     ? genericAlternatives?.find((a: any) =>
+        // Must be a generic
         (a.is_generic === true || a.isGeneric === true || a.isGeneric === "true" || (a.medicine_type || '').toLowerCase().includes('generic')) &&
-        String(a._id || a.id) !== String(product?._id || product?.id))
+        // Must NOT be the same product
+        String(a._id || a.id) !== String(product?._id || product?.id) &&
+        // Must share the same moleculeId — prevents random generic from appearing
+        !!product?.moleculeId &&
+        (a.moleculeId === product.moleculeId || a.molecule_code === product.molecule_code || a.moleculeId === product.molecule_code))
     : null);
+
+  // Show comparison ONLY when:
+  // - current product is a brand (not generic)
+  // - we found a real matching generic with the same molecule
   const showComparison = !isGeneric && !!genericAlt;
 
   // ── Prices ───────────────────────────────────────────────────────────────

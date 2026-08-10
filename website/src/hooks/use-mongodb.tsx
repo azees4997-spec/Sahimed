@@ -42,6 +42,12 @@ export function useMongoDBCollection<T = any>(options: {
     const controller = new AbortController();
 
     const fetchData = async () => {
+      // Skip entirely if caller passes limit:0 (means "don't fetch")
+      if (options.limit === 0) {
+        if (!cancelled) { setData([]); setIsLoading(false); }
+        return;
+      }
+
       const params = new URLSearchParams();
       if (options.limit) params.append('limit', options.limit.toString());
       if (options.category) params.append('category', options.category);
