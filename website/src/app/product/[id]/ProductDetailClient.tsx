@@ -449,39 +449,41 @@ export default function ProductDetailClient({
           )}
 
           {/* ═══ DESKTOP HERO (instant) ═════════════════════════════════════ */}
-          <div className="hidden sm:grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            <ImageGallery
-              images={images}
-              productName={product?.name}
-              discountPct={discountPct}
-              prescriptionRequired={product?.prescriptionRequired}
-              currentImageIndex={currentImageIndex}
-              onImageChange={setCurrentImageIndex}
-            />
-            <PricingCard
-              product={product}
-              unitPrice={unitPrice}
-              unitMrp={unitMrp}
-              currentPrice={currentPrice}
-              currentMrp={currentMrp}
-              discountPct={discountPct}
-              selectedQty={selectedQty}
-              qty={qty}
-              edd={edd}
-              zone={zone}
-              isServiceable={isServiceable}
-              activePincode={activePincode}
-              isEditingPincode={isEditingPincode}
-              timeLeft={timeLeft}
-              onQtyChange={setSelectedQty}
-              onAddToCart={addCurrentToCart}
-              onUpdateQty={updateQuantity}
-              onShareOpen={() => setIsShareOpen(true)}
-              onPincodeEdit={() => setIsEditingPincode(!isEditingPincode)}
-              onPincodeChange={setActivePincode}
-              onPincodeCheck={() => { fetchEdd(activePincode); setIsEditingPincode(false); }}
-            />
-          </div>
+          {!showComparison && (
+            <div className="hidden sm:grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              <ImageGallery
+                images={images}
+                productName={product?.name}
+                discountPct={discountPct}
+                prescriptionRequired={product?.prescriptionRequired}
+                currentImageIndex={currentImageIndex}
+                onImageChange={setCurrentImageIndex}
+              />
+              <PricingCard
+                product={product}
+                unitPrice={unitPrice}
+                unitMrp={unitMrp}
+                currentPrice={currentPrice}
+                currentMrp={currentMrp}
+                discountPct={discountPct}
+                selectedQty={selectedQty}
+                qty={qty}
+                edd={edd}
+                zone={zone}
+                isServiceable={isServiceable}
+                activePincode={activePincode}
+                isEditingPincode={isEditingPincode}
+                timeLeft={timeLeft}
+                onQtyChange={setSelectedQty}
+                onAddToCart={addCurrentToCart}
+                onUpdateQty={updateQuantity}
+                onShareOpen={() => setIsShareOpen(true)}
+                onPincodeEdit={() => setIsEditingPincode(!isEditingPincode)}
+                onPincodeChange={setActivePincode}
+                onPincodeCheck={() => { fetchEdd(activePincode); setIsEditingPincode(false); }}
+              />
+            </div>
+          )}
 
           {/* ═══ DRUG INFO TABS (lazy — loads on first tab click) ═══════════ */}
           {/* Tab bar is always shown; only content lazy-loads */}
