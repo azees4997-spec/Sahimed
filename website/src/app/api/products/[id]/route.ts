@@ -61,9 +61,15 @@ export async function GET(
           _id: { $ne: product._id }
         };
         if (product.molecule_code) {
-          genQuery.molecule_code = product.molecule_code;
-        } else if (product.medical_info?.composition) {
-          genQuery['medical_info.composition'] = { $regex: product.medical_info.composition.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+          genQuery.$or = [
+            { molecule_code: product.molecule_code },
+            { molecule_id: product.molecule_code }
+          ];
+        } else if (product.medical_info?.composition?.trim()) {
+          genQuery['medical_info.composition'] = { $regex: product.medical_info.composition.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+        } else {
+          // No molecule code or composition available — do not attempt generic lookup
+          genQuery._id = null;
         }
         const found = await col.findOne(genQuery);
         if (found) {

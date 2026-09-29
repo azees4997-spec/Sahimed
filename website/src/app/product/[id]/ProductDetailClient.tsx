@@ -327,18 +327,29 @@ export default function ProductDetailClient({
   // e.g. "Paracetamol (1000mg)" vs "Desvenlafaxine (50mg)" → NO overlap → don't show card.
   const compositionsMatch = (() => {
     if (!genericAlt) return false;
-    if (!product?.composition) return true; // no composition data — trust moleculeId
-    const genericComposition = genericAlt?.composition || genericAlt?.taxonomy?.composition || '';
-    if (!genericComposition) return true; // generic has no composition data — trust moleculeId
+    const brandComp = product?.composition || product?.saltComposition || product?.medical_info?.composition || '';
+    const genericComp = genericAlt?.composition || genericAlt?.saltComposition || genericAlt?.medical_info?.composition || genericAlt?.taxonomy?.composition || '';
+    
+    const brandMol = product?.molecule_code || product?.moleculeId || product?.molecule_id;
+    const genMol = genericAlt?.molecule_code || genericAlt?.moleculeId || genericAlt?.molecule_id;
+
+    // If both have molecule codes, enforce exact match
+    if (brandMol && genMol) {
+      return brandMol === genMol;
+    }
+
+    if (!brandComp || !genericComp) return false;
+
     // Extract first salt keyword (first word before space/bracket/digit)
     const firstSalt = (s: string) => s.split(/[\s(,+]/)[0].toLowerCase().trim();
-    const brandSalt = firstSalt(product.composition);
-    const genSalt = firstSalt(genericComposition);
-    // Check if brand salt appears in generic composition or vice versa (case-insensitive)
+    const brandSalt = firstSalt(brandComp);
+    const genSalt = firstSalt(genericComp);
+
     return (
-      genericComposition.toLowerCase().includes(brandSalt) ||
-      product.composition.toLowerCase().includes(genSalt) ||
-      brandSalt === genSalt
+      brandSalt.length > 2 && genSalt.length > 2 &&
+      (genericComp.toLowerCase().includes(brandSalt) ||
+       brandComp.toLowerCase().includes(genSalt) ||
+       brandSalt === genSalt)
     );
   })();
 
