@@ -199,7 +199,7 @@ export default function ProductDetailClient({
   const [selectedQty, setSelectedQty] = useState(1);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
-  const [tabsLoaded, setTabsLoaded] = useState(false);
+  const [tabsLoaded, setTabsLoaded] = useState(true);
   const [bottomLoaded, setBottomLoaded] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
