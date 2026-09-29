@@ -78,7 +78,6 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;
 
   return (
-  return (
     <footer className="relative bg-[#04382c] text-emerald-50 pt-16 pb-32 sm:pb-12 overflow-hidden border-t border-emerald-800/80">
       {/* Top primary accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500" />
