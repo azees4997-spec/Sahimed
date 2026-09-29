@@ -492,8 +492,12 @@ export default function Navbar() {
           seenCompositionTerms.add(compKey);
         }
       } else {
-        // Brand suggestion — TRUST the API relevance, do NOT re-filter
-        if (name && !seenBrandTerms.has(name.toLowerCase())) {
+        const lowerName = name.toLowerCase();
+        const lowerSalt = salt.toLowerCase();
+        const matchesTerm = lowerName.includes(term) || lowerSalt.includes(term);
+
+        // Brand suggestion — include if product name or salt composition contains the search term
+        if (matchesTerm && name && !seenBrandTerms.has(lowerName)) {
           items.push({ 
             id: `brand-${id}`, 
             term: name, 
@@ -502,12 +506,12 @@ export default function Navbar() {
             imageUrl,
             product: p 
           } as any);
-          seenBrandTerms.add(name.toLowerCase());
+          seenBrandTerms.add(lowerName);
         }
-        
+
         // Handle Salt/Composition Match from Medicine
-        if (salt.toLowerCase().includes(term)) {
-          const compKey = salt.toLowerCase().trim();
+        if (lowerSalt.includes(term)) {
+          const compKey = lowerSalt.trim();
           if (!seenCompositionTerms.has(compKey)) {
             items.push({ 
               id: `salt-${id}`, 
@@ -521,20 +525,26 @@ export default function Navbar() {
     });
 
     // Priority Relevance Sorting:
-    // Exact word start (e.g. "Dolo ", "Dolo 650") -> Tier 1
-    // Compound prefix (e.g. "DOLOKind") -> Tier 2
-    const cleanEscaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // 1. Starts with search term (e.g. "Januvia", "Janumet" for "janu") -> Top priority
+    // 2. Contains search term -> Medium priority
+    // 3. Alphabetical fallback
     items.sort((a, b) => {
       const nameA = a.term.toLowerCase();
       const nameB = b.term.toLowerCase();
 
-      const exactA = new RegExp(`^${cleanEscaped}(\\s|\\b|$)`, 'i').test(nameA);
-      const exactB = new RegExp(`^${cleanEscaped}(\\s|\\b|$)`, 'i').test(nameB);
+      const startsA = nameA.startsWith(term);
+      const startsB = nameB.startsWith(term);
 
-      if (exactA && !exactB) return -1;
-      if (!exactA && exactB) return 1;
+      if (startsA && !startsB) return -1;
+      if (!startsA && startsB) return 1;
 
-      return 0;
+      const containsA = nameA.includes(term);
+      const containsB = nameB.includes(term);
+
+      if (containsA && !containsB) return -1;
+      if (!containsA && containsB) return 1;
+
+      return nameA.localeCompare(nameB);
     });
 
     return items;

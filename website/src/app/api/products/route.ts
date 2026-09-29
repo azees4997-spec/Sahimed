@@ -262,24 +262,25 @@ export async function GET(request: Request) {
 
     // Typo-tolerant character-distance fuzzy fallback if 0 results found
     if (products.length === 0 && qStr && terms.length > 0) {
-      const fuzzyQuery = {
-        ...query,
-        $and: undefined,
-        $or: terms.flatMap(t => [
-          { product_name: { $regex: buildFuzzyRegex(t), $options: 'i' } },
-          { 'medical_info.composition': { $regex: buildFuzzyRegex(t), $options: 'i' } },
-        ])
-      };
-      delete fuzzyQuery.$and;
-      products = await col
-        .find(fuzzyQuery)
-        .sort({ product_name: 1 })
-        .limit(limitValue)
-        .toArray();
+      const firstChar = cleanTerm.charAt(0);
+      if (cleanTerm.length >= 3 && /[a-zA-Z0-9]/.test(firstChar)) {
+        const prefixMatchRegex = new RegExp(`^${escapeRegExp(cleanTerm.slice(0, 3))}`, 'i');
+        products = await col
+          .find({
+            ...baseFilterQuery,
+            $or: [
+              { product_name: prefixMatchRegex },
+              { 'medical_info.composition': prefixMatchRegex }
+            ]
+          })
+          .sort({ product_name: 1 })
+          .limit(limitValue)
+          .toArray();
 
-      if (products.length > 0 && !wasAutoCorrected) {
-        wasAutoCorrected = true;
-        correctedQueryText = products[0].product_name;
+        if (products.length > 0 && !wasAutoCorrected) {
+          wasAutoCorrected = true;
+          correctedQueryText = products[0].product_name;
+        }
       }
     }
 

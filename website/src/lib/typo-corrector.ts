@@ -91,6 +91,13 @@ const PHARMA_TYPO_MAP: Record<string, string> = {
   'zifi200': 'Zifi',
   'augmentin625': 'Augmentin',
   'agumentin': 'Augmentin',
+
+  // Diabetes & Gliptin Brands (e.g. Januvia, Janumet)
+  'janu': 'Januvia',
+  'januvia': 'Januvia',
+  'janumet': 'Janumet',
+  'sitagliptin': 'Sitagliptin',
+  'sitagliptn': 'Sitagliptin',
 };
 
 export interface CorrectionResult {
