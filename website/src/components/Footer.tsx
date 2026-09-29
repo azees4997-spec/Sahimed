@@ -133,7 +133,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 2: Quick Shop */}
           <div className="space-y-7">
-            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-900 font-outfit">Discover Store</h4>
+            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary font-outfit">Discover Store</h4>
             <ul className="space-y-3">
               {[
                 { label: 'All Medicines', href: '/medicines' },
@@ -153,7 +153,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 3: Know Us */}
           <div className="space-y-7">
-            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-900 font-outfit">Know Us</h4>
+            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary font-outfit">Know Us</h4>
             <ul className="space-y-3">
               {footerPages?.map((page: any) => (
                 <li key={page.id}>
@@ -168,7 +168,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 4: Support */}
           <div className="space-y-7">
-            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-900 font-outfit">Pharma Support</h4>
+            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary font-outfit">Pharma Support</h4>
             <div className="space-y-5">
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
@@ -202,7 +202,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
         {/* Service Areas SEO Strip */}
         <div className="pt-8 mb-8 border-t border-slate-100">
-          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-900 mb-5 text-center lg:text-left font-outfit">Popular Service Areas</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-primary mb-5 text-center lg:text-left font-outfit">Popular Service Areas</p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start">
             {[
               { name: 'Delhi NCR', id: 'delhi' },
