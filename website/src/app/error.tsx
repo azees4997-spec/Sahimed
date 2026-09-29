@@ -6,12 +6,33 @@ import Link from 'next/link';
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('[Sahimed Error]', error);
+
+    // Auto-recover from ChunkLoadError (caused when new deployments replace old chunk files)
+    const isChunkError =
+      error?.name === 'ChunkLoadError' ||
+      (error?.message && (error.message.includes('Loading chunk') || error.message.includes('ChunkLoadError')));
+
+    if (isChunkError && typeof window !== 'undefined') {
+      const storageKey = 'sahimed_chunk_reload_done';
+      if (!sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(storageKey, 'true');
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   const errorCode = error?.digest || error?.message || 'ERR_UNKNOWN';
 
   const copyErrorCode = () => {
     navigator.clipboard.writeText(errorCode).catch(() => {});
+  };
+
+  const handleRefresh = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    } else {
+      reset();
+    }
   };
 
   return (
@@ -35,17 +56,25 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 uppercase font-outfit mb-3">
         Oops! Something<br className="sm:hidden" /> went wrong
       </h1>
-      <p className="text-sm font-medium text-slate-400 mb-10 max-w-sm mx-auto leading-relaxed">
-        We hit an unexpected snag. Our team has been notified. Try again or head back home.
+      <p className="text-sm font-medium text-slate-400 mb-8 max-w-sm mx-auto leading-relaxed">
+        We hit an unexpected snag. Try refreshing the page or head back home.
       </p>
 
-      {/* Primary Action */}
-      <Link
-        href="/"
-        className="inline-flex items-center gap-3 h-16 px-10 rounded-full bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all mb-6"
-      >
-        Go to Home
-      </Link>
+      {/* Primary Actions */}
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+        <button
+          onClick={handleRefresh}
+          className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full bg-primary text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+        >
+          Refresh Page
+        </button>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+        >
+          Go to Home
+        </Link>
+      </div>
 
       {/* Support Row */}
       <div className="flex items-center gap-4 mb-10">
