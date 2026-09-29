@@ -397,9 +397,8 @@ export default function Navbar() {
   const navSearchCache = useRef<Map<string, any[]>>(new Map());
 
   useEffect(() => {
-    // Require at least 3 characters before searching (spaces & special chars count toward length)
-    // This prevents wasteful API calls on single/double keystrokes
-    if (search.length < 3) {
+    // Require at least 2 characters before searching
+    if (search.length < 2) {
       setRawSuggestions([]);
       setIsSearching(false);
       setShowSuggestions(false);
@@ -820,14 +819,8 @@ export default function Navbar() {
                           </div>
                         </div>
                       </div>
-                    ) : isSearching ? (
-                      /* CASE 2: LOADING STATE */
-                      <div className="p-8 flex items-center justify-center gap-3 text-slate-500">
-                        <Loader2 className="w-5 h-5 animate-spin text-teal-600" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Searching SahiMed catalog for "{search}"...</span>
-                      </div>
                     ) : suggestions.length > 0 ? (
-                      /* CASE 3: INPUT TYPED -> Single Column Suggestions List */
+                      /* CASE 2: INPUT TYPED -> Single Column Suggestions List (Instant display) */
                       <div className="max-h-[420px] overflow-y-auto scrollbar-hide bg-white">
                         {/* Salt / composition chips */}
                         {suggestions.filter(s => s.type === 'Salt').length > 0 && (
@@ -917,6 +910,20 @@ export default function Navbar() {
                           </span>
                           <ArrowUpRight className="w-4 h-4 text-primary" />
                         </div>
+                      </div>
+                    ) : isSearching ? (
+                      /* CASE 3: LOADING STATE WITH ANIMATED SKELETONS */
+                      <div className="p-4 space-y-3 bg-white">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="flex items-center gap-3.5 px-2 py-2 animate-pulse">
+                            <div className="w-11 h-11 bg-slate-100 rounded-xl shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-3.5 bg-slate-100 rounded w-3/4" />
+                              <div className="h-2.5 bg-slate-50 rounded w-1/2" />
+                            </div>
+                            <div className="w-14 h-7 bg-slate-100 rounded-lg shrink-0" />
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       /* CASE 4: NO RESULTS FOUND */
