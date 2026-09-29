@@ -424,12 +424,9 @@ export default function Navbar() {
     }
 
     const controller = new AbortController();
-    let timeoutId: any = null;
 
     const fetchSuggestions = async () => {
       setIsSearching(true);
-      timeoutId = setTimeout(() => controller.abort(), 2500);
-
       try {
         const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`, { 
           cache: 'no-store',
@@ -454,7 +451,6 @@ export default function Navbar() {
           console.error("Suggestion fetch failed", err);
         }
       } finally {
-        if (timeoutId) clearTimeout(timeoutId);
         setIsSearching(false);
       }
     };
@@ -463,7 +459,6 @@ export default function Navbar() {
     const timer = setTimeout(fetchSuggestions, 150);
     return () => {
       clearTimeout(timer);
-      if (timeoutId) clearTimeout(timeoutId);
       controller.abort();
     };
   }, [search]);

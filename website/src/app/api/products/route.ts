@@ -303,7 +303,6 @@ export async function GET(request: Request) {
       try {
         molecules = await db.collection('Molecule Master')
           .find({ Composition: { $regex: cleanEscaped, $options: 'i' } })
-          .maxTimeMS(400)
           .limit(5)
           .toArray();
       } catch (e) {
