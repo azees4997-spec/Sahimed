@@ -24,6 +24,19 @@ function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Global in-memory search response cache for ultra-fast response times (<2ms)
+const apiProductSearchCache = new Map<string, { data: any; timestamp: number }>();
+const API_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const MAX_API_CACHE_SIZE = 100;
+
+function setApiCache(key: string, data: any) {
+  if (apiProductSearchCache.size >= MAX_API_CACHE_SIZE) {
+    const oldest = apiProductSearchCache.keys().next().value;
+    if (oldest) apiProductSearchCache.delete(oldest);
+  }
+  apiProductSearchCache.set(key, { data, timestamp: Date.now() });
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -49,6 +62,19 @@ export async function GET(request: Request) {
   const minPrice = searchParams.get('minPrice');
   const maxPrice = searchParams.get('maxPrice');
   const showDisabled = searchParams.get('showDisabled') === 'true';
+
+  const cacheKey = request.url;
+  if (!showDisabled) {
+    const cached = apiProductSearchCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < API_CACHE_TTL)) {
+      return NextResponse.json(cached.data, {
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+          'X-Cache': 'HIT'
+        }
+      });
+    }
+  }
 
   try {
     const client = await clientPromise;
@@ -198,61 +224,40 @@ export async function GET(request: Request) {
 
     let products: any[] = [];
     if (cleanTerm) {
-      // 1. Parallel High-Speed Indexed Search across Product Name Prefix, Full Contains & Active Salt Composition (<15ms)
       try {
-        const [prefixName, containsName, compositionMatch] = await Promise.all([
-          col.find(
-            { ...baseFilterQuery, product_name: { $regex: `^${cleanEscaped}`, $options: 'i' } },
-            { projection: listProjection }
-          ).maxTimeMS(2500).limit(limitValue).toArray(),
-          col.find(
-            { ...baseFilterQuery, product_name: { $regex: cleanEscaped, $options: 'i' } },
-            { projection: listProjection }
-          ).maxTimeMS(2500).limit(limitValue).toArray(),
-          col.find(
-            { ...baseFilterQuery, 'medical_info.composition': { $regex: cleanEscaped, $options: 'i' } },
-            { projection: listProjection }
-          ).maxTimeMS(2500).limit(limitValue).toArray()
-        ]);
+        const searchRegex = new RegExp(cleanEscaped, 'i');
+        const prefixRegex = new RegExp(`^${cleanEscaped}`, 'i');
 
-        const resultMap = new Map();
-        prefixName.forEach(p => resultMap.set(p._id.toString(), p));
-        containsName.forEach(p => resultMap.set(p._id.toString(), p));
-        compositionMatch.forEach(p => resultMap.set(p._id.toString(), p));
-        products = Array.from(resultMap.values()).slice(0, limitValue);
+        products = await col.find(
+          {
+            ...baseFilterQuery,
+            $or: [
+              { product_name: prefixRegex },
+              { product_name: searchRegex },
+              { 'medical_info.composition': searchRegex },
+              { 'taxonomy.marketer_name': searchRegex },
+              { 'taxonomy.category_name': searchRegex }
+            ]
+          },
+          { projection: listProjection }
+        ).maxTimeMS(1200).limit(limitValue).toArray();
+
+        // Sort exact & prefix matches first
+        products.sort((a, b) => {
+          const aName = (a.product_name || '').toLowerCase();
+          const bName = (b.product_name || '').toLowerCase();
+          const lowerTerm = cleanTerm.toLowerCase();
+          const aStart = aName.startsWith(lowerTerm);
+          const bStart = bName.startsWith(lowerTerm);
+          if (aStart && !bStart) return -1;
+          if (!aStart && bStart) return 1;
+          return aName.localeCompare(bName);
+        });
       } catch (e) {
-        console.error('[Indexed Multi-Stage Search Error]', e);
-      }
-
-      // 2. Atlas $search pipeline fallback if B-Tree search returned fewer items
-      if (products.length < limitValue) {
-        try {
-          const atlasSearchRes = await col.aggregate([
-            {
-              $search: {
-                index: 'default',
-                text: {
-                  query: cleanTerm,
-                  path: ['product_name', 'medical_info.composition'],
-                  fuzzy: { maxEdits: 2, prefixLength: 0 }
-                }
-              }
-            },
-            { $match: baseFilterQuery },
-            { $limit: limitValue },
-            { $project: listProjection }
-          ]).toArray();
-
-          const resultMap = new Map();
-          products.forEach(p => resultMap.set(p._id.toString(), p));
-          atlasSearchRes.forEach(p => resultMap.set(p._id.toString(), p));
-          products = Array.from(resultMap.values()).slice(0, limitValue);
-        } catch (e) {
-          // Atlas search optional fallback failure silently ignored
-        }
+        console.error('[Indexed High-Speed Search Error]', e);
       }
     } else {
-      products = await col.find(baseFilterQuery, { projection: listProjection }).limit(limitValue).toArray();
+      products = await col.find(baseFilterQuery, { projection: listProjection }).maxTimeMS(1200).limit(limitValue).toArray();
     }
 
     // Typo-tolerant character-distance fuzzy fallback if 0 results found
@@ -375,11 +380,15 @@ export async function GET(request: Request) {
 
     const finalResults = [...normalizedMolecules, ...normalizedProducts];
 
+    if (!showDisabled && finalResults.length > 0) {
+      setApiCache(cacheKey, finalResults);
+    }
+
     return NextResponse.json(finalResults, {
       headers: { 
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-        'CDN-Cache-Control': 'no-store',
-        'Vercel-CDN-Cache-Control': 'no-store'
+        'Cache-Control': showDisabled ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+        'CDN-Cache-Control': showDisabled ? 'no-store' : 'public, s-maxage=300',
+        'X-Cache': 'MISS'
       },
     });
 

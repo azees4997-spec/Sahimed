@@ -455,8 +455,8 @@ export default function Navbar() {
       }
     };
 
-    // 350ms debounce — waits for user to pause typing before hitting MongoDB
-    const timer = setTimeout(fetchSuggestions, 350);
+    // 150ms debounce — instant response as user types
+    const timer = setTimeout(fetchSuggestions, 150);
     return () => {
       clearTimeout(timer);
       controller.abort();
