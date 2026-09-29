@@ -391,6 +391,7 @@ export default function CheckoutPage() {
           title: "Not Serviceable", 
           description: `We currently do not deliver to pincode ${orderInfo.pincode}.` 
         });
+        isPlacingOrderRef.current = false;
         setLoading(false);
         return;
       }
@@ -551,6 +552,7 @@ export default function CheckoutPage() {
           notifyMerchant: function (eventName: string, data: any) {
             console.log("Paytm Event:", eventName, data);
             if (eventName === 'SESSION_EXPIRED') {
+               isPlacingOrderRef.current = false;
                setLoading(false);
                toast({ variant: 'destructive', title: "Session Expired", description: "Please try again." });
             }
@@ -564,6 +566,7 @@ export default function CheckoutPage() {
           setLoading(false);
         }).catch(function onError(error: any) {
           console.error("Paytm Error:", error);
+          isPlacingOrderRef.current = false;
           setLoading(false);
           toast({ variant: 'destructive', title: "Payment Error", description: "Could not open Paytm overlay." });
         });
@@ -571,6 +574,7 @@ export default function CheckoutPage() {
         throw new Error("Paytm SDK not loaded");
       }
     } catch (err: any) {
+      isPlacingOrderRef.current = false;
       setLoading(false);
       console.error("[Paytm Error Details]", err);
       toast({ 

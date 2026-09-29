@@ -127,29 +127,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [attachedPrescriptions]);
 
   const addToCart = (product: Product, qty: number = 1) => {
+    const normalizedId = product.id || (product as any)._id;
+    if (!normalizedId) return;
+    const normalizedProduct = { ...product, id: normalizedId };
+
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => (item.id || (item as any)._id) === normalizedId);
       if (existing) {
         return prev.map(item =>
-          item.id === product.id ? { ...item, quantity: item.quantity + qty } : item
+          (item.id || (item as any)._id) === normalizedId ? { ...item, ...normalizedProduct, quantity: item.quantity + qty } : item
         );
       }
-      return [...prev, { ...product, quantity: qty }];
+      return [...prev, { ...normalizedProduct, quantity: qty }];
     });
   };
 
   const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+    setCart(prev => prev.filter(item => item.id !== id && (item as any)._id !== id));
   };
 
   const updateQuantity = (id: string, delta: number) => {
     setCart(prev => {
-      const existing = prev.find(i => i.id === id);
+      const existing = prev.find(i => i.id === id || (i as any)._id === id);
       if (existing && existing.quantity === 1 && delta === -1) {
-        return prev.filter(i => i.id !== id);
+        return prev.filter(i => i.id !== id && (i as any)._id !== id);
       }
       return prev.map(item => {
-        if (item.id === id) {
+        if (item.id === id || (item as any)._id === id) {
           const newQty = Math.max(0, item.quantity + delta);
           return { ...item, quantity: newQty };
         }
@@ -159,7 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getItemQuantity = (id: string) => {
-    return cart.find(item => item.id === id)?.quantity || 0;
+    return cart.find(item => item.id === id || (item as any)._id === id)?.quantity || 0;
   };
 
   const clearCart = () => {

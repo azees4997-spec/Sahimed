@@ -360,7 +360,17 @@ export default function ProductDetailClient({
   const altSavePct  = unitMrp > 0 && altPrice > 0 ? Math.round(((unitMrp - altPrice) / unitMrp) * 100) : 0;
   const switchSavingsAmount = unitPrice > altPrice ? (unitPrice - altPrice) : 0;
 
-  const images = product?.images?.length > 0 ? product.images : ['/images/medicine_placeholder.png'];
+  const rawImages = [
+    product?.image1,
+    product?.image2,
+    product?.image3,
+    ...(Array.isArray(product?.imageUrls) ? product.imageUrls : []),
+    product?.imageUrl,
+    ...(Array.isArray(product?.images) ? product.images : [])
+  ].filter(Boolean);
+  const images = Array.from(new Set(rawImages)).length > 0
+    ? Array.from(new Set(rawImages))
+    : ['/images/medicine_placeholder.png'];
   const qty = getItemQuantity(product?._id || product?.id);
 
   const addCurrentToCart = (delta = 1) => {
